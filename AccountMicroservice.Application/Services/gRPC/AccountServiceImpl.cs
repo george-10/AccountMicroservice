@@ -17,9 +17,11 @@ public class AccountServiceImpl : AccountService.AccountServiceBase
 
     public override async Task<CheckAccountResponse> CheckAccount(CheckAccountRequest request, ServerCallContext context)
     {
+        Console.WriteLine("============================="+request.AccountId);
+        Console.WriteLine("============================="+request.BranchId);
         var accountExists = await _context.Accounts.Where(x => x.BranchId == request.BranchId)
             .AnyAsync(a => a.Id == request.AccountId);
-    
+    Console.WriteLine(accountExists);
         return new CheckAccountResponse
         {
             Exists = accountExists

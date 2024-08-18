@@ -1,5 +1,6 @@
 ﻿using AccountMicroservice.Domain.Models;
 using Grpc.Core;
+using Microsoft.EntityFrameworkCore;
 
 namespace AccountMicroservice.Application.Services.gRPC;
 
@@ -11,28 +12,47 @@ public class gRPCRollbackService :AdminRollBackService.AdminRollBackServiceBase
     {
         _context = context;
     }
-    public override Task<RollbackResponse> Rollback(RollbackRequest request, ServerCallContext context)
+    public override async Task<RollbackResponse> Rollback(RollbackRequest request, ServerCallContext context)
     {
-        IQueryable<Transaction> transactions;
-        if (request.AllBranches == true)
+        IQueryable<Transaction> transactionsQuery;
+
+      
+        if (request.AllBranches)
         {
-            transactions = _context.Transactions.Where(t => t.Timestamp >= Convert.ToDateTime(request.Date));
+            transactionsQuery = _context.Transactions.Where(t => t.Timestamp >= Convert.ToDateTime(request.Date));
         }
         else
         {
-            transactions = _context.Transactions.Where(t => t.Timestamp >= Convert.ToDateTime(request.Date) && t.BranchId == request.BranchId);
+            transactionsQuery = _context.Transactions.Where(t => t.Timestamp >= Convert.ToDateTime(request.Date) && t.BranchId == request.BranchId);
         }
 
-        foreach (var VARIABLE in transactions)
+
+        var transactions = await transactionsQuery.ToListAsync();
+
+        foreach (var transaction in transactions)
         {
-            var accountId = VARIABLE.AccountId;
-            var account = _context.Accounts.FirstOrDefault(x => x.UserId == accountId);
-            account.Balance = (bool) VARIABLE.Deposit ? account.Balance -= VARIABLE.Amount : account.Balance += VARIABLE.Amount;
+            var accountId = transaction.AccountId;
+            var account = await _context.Accounts.FirstOrDefaultAsync(x => x.UserId == accountId);
+
+            if (account != null)
+            {
+                account.Balance = (bool)transaction.Deposit 
+                    ? account.Balance -= transaction.Amount 
+                    : account.Balance += transaction.Amount;
+
+                await _context.SaveChangesAsync();
+            }
         }
+
+        _context.Transactions.RemoveRange(transactions);
+        await _context.SaveChangesAsync();
+
         var response = new RollbackResponse
         {
             Status = true
         };
-        return Task.FromResult(response);
+    
+        return await Task.FromResult(response);
     }
+
 }
