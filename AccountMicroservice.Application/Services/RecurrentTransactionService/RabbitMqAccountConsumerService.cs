@@ -30,35 +30,47 @@ public class RabbitMqAccountConsumerService :BackgroundService
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var connection = _factory.CreateConnection();
-        var channel = connection.CreateModel();
-
-        channel.QueueDeclare(queue: "accountQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
-
-        var consumer = new EventingBasicConsumer(channel);
-        consumer.Received += async (model, ea) =>
+        try
         {
-            using (var scope = _scopeFactory.CreateScope())
+            var connection = _factory.CreateConnection();
+            var channel = connection.CreateModel();
+
+            channel.QueueDeclare(queue: "accountQueue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+        
+            var consumer = new EventingBasicConsumer(channel);
+            consumer.Received += async (model, ea) =>
             {
-                var context = scope.ServiceProvider.GetRequiredService<AccountDbContext>();
+                using (var scope = _scopeFactory.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<AccountDbContext>();
 
-                var body = ea.Body.ToArray();
-                var message = Encoding.UTF8.GetString(body);
-                var entity = JsonConvert.DeserializeObject<AccountViewModel>(message);
+                    var body = ea.Body.ToArray();
+                    var message = Encoding.UTF8.GetString(body);
+                    var entity = JsonConvert.DeserializeObject<AccountViewModel>(message);
+                
+                    Account acc = _mapper.Map<Account>(entity);
+                    acc.Id = 0;
+                    bool canBeCreated  = context.Accounts.Where(x => x.UserId == acc.UserId).Count()<5;
+                    if (!canBeCreated)
+                    {
+                        throw new Exception("Account limit reached");
+                    }
+                    context.Accounts.Add(acc);
+                    await context.SaveChangesAsync();
 
-                Account acc = _mapper.Map<Account>(entity);
-                acc.Id = 0;
 
+                    Console.WriteLine($" [x] Received entity with ID: {entity.Id}, AccountId: {entity.Name}");
+                }
+            };
 
-                context.Accounts.Add(acc);
-                await context.SaveChangesAsync();
+            channel.BasicConsume(queue: "accountQueue", autoAck: true, consumer: consumer);
 
-
-                Console.WriteLine($" [x] Received entity with ID: {entity.Id}, AccountId: {entity.Name}");
-            }
-        };
-
-        channel.BasicConsume(queue: "accountQueue", autoAck: true, consumer: consumer);
+            return Task.CompletedTask;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
 
         return Task.CompletedTask;
     }

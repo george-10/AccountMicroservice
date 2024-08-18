@@ -50,6 +50,7 @@ app.UseGrpcWeb();
 app.MapGrpcService<AccountServiceImpl>().EnableGrpcWeb();
 app.MapGrpcService<gRPCTransactionImpl>().EnableGrpcWeb();
 app.MapGrpcService<gRPCAccountImpl>().EnableGrpcWeb();
+app.MapGrpcService<gRPCRollbackService>().EnableGrpcWeb();
 app.UseCors("AllowAll");
 
 app.Run();

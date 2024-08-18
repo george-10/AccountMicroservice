@@ -33,7 +33,14 @@ message Accountres {
   string name = 4;
   string branch_id = 5;
 }
-
+//account count
+message GetAccountNumberRequest{
+  int64 userId=1;
+}
+message GetAccountNumberResponse{
+  int32 count=1;
+}
+//Accounts fetch
 message GetAccountRequest {
   int64 userId = 1;
 }
@@ -43,7 +50,24 @@ message GetAccountResponse {
   repeated Accountres account = 1;
 }
 
+//Rollback service
+
+message RollbackRequest{
+  string date = 1;
+  string branchId = 2;
+  bool allBranches = 3;
+}
+message RollbackResponse{
+  bool status = 1;
+}
 service CustomerAccountService {
   rpc GetAccount (GetAccountRequest) returns (GetAccountResponse);
+  rpc GetAccountCount (GetAccountNumberRequest) returns (GetAccountNumberResponse);
+  
 }
+service AdminRollBackService{
+  rpc Rollback (RollbackRequest) returns (RollbackResponse);
+}
+
+
 

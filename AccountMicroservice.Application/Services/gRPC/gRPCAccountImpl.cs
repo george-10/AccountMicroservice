@@ -24,4 +24,14 @@ public class gRPCAccountImpl:CustomerAccountService.CustomerAccountServiceBase
 
         return Task.FromResult(response);
     }
+
+    public override Task<GetAccountNumberResponse> GetAccountCount(GetAccountNumberRequest request, ServerCallContext context)
+    {
+        var count =  _context.Accounts.Where(x => x.UserId == request.UserId).Count();
+        var response =  new GetAccountNumberResponse
+        {
+            Count = count
+        };
+        return Task.FromResult(response);
+    }
 }
