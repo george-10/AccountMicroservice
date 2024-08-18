@@ -1,0 +1,16 @@
+
+syntax = "proto3";
+
+
+message CheckAccountRequest {
+  int64 account_id = 1;
+  string BranchId = 2;
+}
+
+message CheckAccountResponse {
+  bool exists = 1;
+}
+
+service AccountService {
+  rpc CheckAccount (CheckAccountRequest) returns (CheckAccountResponse);
+}

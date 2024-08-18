@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="automapper" Version="13.0.1" />
+      <PackageReference Include="Google.Protobuf" Version="3.28.0-rc2" />
+      <PackageReference Include="Grpc.Core" Version="2.46.6" />
+      <PackageReference Include="Grpc.Tools" Version="2.66.0-pre5">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+      <PackageReference Include="RabbitMq.client" Version="6.8.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\AccountMicroservice.Persistence\AccountMicroservice.Persistence.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\AccountMicroservice.Persistence\AccountMicroservice.Persistence.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <Protobuf Include="Protos\validation.proto" GrpcServices="Server">
+        </Protobuf>
+        <Protobuf Include="Protos\AccountMicroservice.proto" GrpcServices="Server">
+        </Protobuf>
+    </ItemGroup>
+</Project>
